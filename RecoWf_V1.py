@@ -53,6 +53,7 @@ if __name__== '__main__':
         wf = df[df["event"]==nev].copy()
 
         ChList = wf.columns[1:-1].tolist()
+        utility.replace_inf_with_max(wf,ChList)
         
         #If true applies the Mean Filter to each channel
         if params['filter']==True:

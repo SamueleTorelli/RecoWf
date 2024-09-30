@@ -43,6 +43,8 @@ if __name__== '__main__':
     ChList = wf.columns[1:-1].tolist()
     print(ChList)
 
+    utility.replace_inf_with_max(wf,ChList)
+
     if params["filter"]==True:
         for i in range(len(ChList)):
             wf[ChList[i]]=utility.MeanFilter(wf[ChList[i]],10)

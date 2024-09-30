@@ -19,8 +19,8 @@ def remove_comments(file_content):
     return '\n'.join(cleaned_lines)
 
 
-def replace_inf_with_max(wf,columns):
-        
+def replace_inf_with_max(wf, columns):
+
     for column in columns:
         # Check if the column contains 'inf'
         if np.any(np.isinf(wf[column])):
@@ -28,8 +28,10 @@ def replace_inf_with_max(wf,columns):
             max_value = wf[column][wf[column] < np.inf].max()
             min_value = wf[column][wf[column] > -np.inf].min()
             # Replace 'inf' with the maximum value
-            wf[column].replace([np.inf], max_value, inplace=True)
-            wf[column].replace([-np.inf], min_value, inplace=True)
+            wf[column] = wf[column].replace([np.inf], max_value)
+            
+            # Replace '-inf' with the minimum value
+            wf[column] = wf[column].replace([-np.inf], min_value)
 
 
 def PlotWfs(wf,sfbegin,params):
