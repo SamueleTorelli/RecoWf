@@ -2,6 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.signal import find_peaks
+from scipy.fft import fft, fftfreq, ifft
 
 pheshape = { 'CH1' : pd.read_csv("singlePhes/averageval_0_vs_TIME.csv"),
     'CH2' : pd.read_csv("singlePhes/averageval_1_vs_TIME.csv"),
@@ -319,5 +320,29 @@ def FindSignalFreeRegion(wf,params):
         rms.append(values[1])
         
     return time,rms
+
+
+def RemoveNoiseFourier(wf,freq_cut):
+
+    sampling_interval = wf['TIME'].iloc[1] - wf['TIME'].iloc[0]
+    sampling_rate = 1 / sampling_interval
+    N = len(wf['TIME'])
+    
+    cols=wf.columns[1:].tolist()
+    
+    for i in range(len(cols)):
+        signal = wf[cols[i]].values
+
+        # Perform Fourier Transform
+        yf = fft(signal)
+        xf = fftfreq(N, sampling_interval)
+
+        # Apply the low-pass filter (zero out frequencies above cutoff)
+        yf[np.abs(xf) > freq_cut] = 0
+
+        # Inverse FFT to obtain the filtered signal in time domain
+        filtered_signal = ifft(yf).real
+
+        wf[cols[i]]=filtered_signal
 
 

@@ -60,6 +60,8 @@ if __name__== '__main__':
             for i in range(len(ChList)):
                 wf[ChList[i]]=utility.MeanFilter(wf[ChList[i]],10)
 
+        if(params["fourier_filter"]):
+            utility.RemoveNoiseFourier(wf,0.1e8)
         
         if(params["variable_mean_rms"]):
             sig_free_time,sig_free_rms = utility.FindSignalFreeRegion(wf,params)

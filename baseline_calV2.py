@@ -49,7 +49,7 @@ def mean_baselane(final_df,params):
         maxrangehisto = filtered_df[filtered_df[channel]<np.inf][channel].max()
         
 
-        hist, bins, _ = ax.hist(filtered_df[channel], bins=350, range=(minrangehisto, maxrangehisto),
+        hist, bins, _ = ax.hist(filtered_df[channel], bins=350, range=(minrangehisto, maxrangehisto/3),
                                 alpha=0.7, color='blue', edgecolor='black', density=True)
 
         

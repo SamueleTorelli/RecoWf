@@ -53,6 +53,11 @@ if __name__== '__main__':
     baselinesRMS=[]
 
     utility.PlotWfs(wf,[0,0,0,0],params)
+
+    if(params["fourier_filter"]):
+        utility.RemoveNoiseFourier(wf,0.1e8)
+        utility.PlotWfs(wf,[0,0,0,0],params)
+
     
     if(params["variable_mean_rms"]):
         sig_free_time,sig_free_rms = utility.FindSignalFreeRegion(wf,params)
@@ -77,7 +82,8 @@ if __name__== '__main__':
     for ch in wf.columns[1:-1].tolist():
         dic_time_begin[ch]=[]
         dic_time_length[ch]=[]
-    
+
+            
     df_mast = pd.DataFrame(columns=['event','channel','time','time_len','integral'])
     
     for i in range(len(ChList)):
