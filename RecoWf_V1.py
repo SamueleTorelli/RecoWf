@@ -38,6 +38,10 @@ if __name__== '__main__':
     baselinesRMS=[]
 
     df = pd.read_hdf(args.inputfile) 
+
+    while(df.columns[-1] != "event"):
+        df = df.drop(columns=df.columns[-1])
+            
     
     if(params["variable_mean_rms"]==False):
         baselines,baselinesRMS = baseline_cal.mean_baselane(df,params)
@@ -52,6 +56,7 @@ if __name__== '__main__':
         #Open df
         wf = df[df["event"]==nev].copy()
 
+                
         ChList = wf.columns[1:-1].tolist()
         utility.replace_inf_with_max(wf,ChList)
         
@@ -75,7 +80,10 @@ if __name__== '__main__':
         #Subtract baseline and calculate RMS
         for i in range(len(ChList)):
             wf[ChList[i]]-=baselines[i]
-                    
+
+        wf=utility.CreateWfSum(wf,params,baselines,baselinesRMS) 
+        ChList = wf.columns[1:-1].tolist()
+        
         dic_time_begin={}
         dic_time_length={}
     
