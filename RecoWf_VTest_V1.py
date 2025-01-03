@@ -35,11 +35,14 @@ if __name__== '__main__':
     inputfile=args.inputfile
     df = pd.read_hdf(inputfile)
 
+    while(df.columns[-1] != "event"):
+        df = df.drop(columns=df.columns[-1])
+    
     wf = df[df["event"]==args.eventunmber].copy()
 
-    if(wf.columns[-1] != "event"):
+    while(wf.columns[-1] != "event"):
         wf = wf.drop(columns=wf.columns[-1])
-    
+
     ChList = wf.columns[1:-1].tolist()
     print(ChList)
 
@@ -76,8 +79,14 @@ if __name__== '__main__':
             wf[ChList[i]]-=baselines[i]
         print(baselines,baselinesRMS)
         
+
+    wf=utility.CreateWfSum(wf,params,baselines,baselinesRMS)
+
+    ChList = wf.columns[1:-1].tolist() 
+    
     dic_time_begin={}
     dic_time_length={}
+    
     
     for ch in wf.columns[1:-1].tolist():
         dic_time_begin[ch]=[]

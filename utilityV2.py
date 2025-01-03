@@ -35,6 +35,7 @@ def replace_inf_with_max(wf, columns):
             wf[column] = wf[column].replace([-np.inf], min_value)
 
 
+            
 def PlotWfs(wf,sfbegin,params):
     # Create a figure with four subplots
     fig, axs = plt.subplots(len(wf.columns[1:-1].tolist()), 1, figsize=(10, 5), sharex=True)
@@ -95,7 +96,7 @@ def plot_scaled_phe( chlist, chindex, A_mid, b, e, sat_thr):
     # Show the plot
     plt.grid(True)
     
-def BuildChList(par):
+def BuildChList(par): #DEPRECATED
 
     #Build the channel list with channel names
     
@@ -110,6 +111,8 @@ def is_saturated(df,b,e,chlist,chindex,par):
 
     sat_thr = eval(par['sat_lv'])
 
+    sat_thr['CHSum'] = sum(sat_thr.values())
+    
     df_range = df[(df['TIME']>b) & (df['TIME']<e)]
 
     sat_length_pt = (df_range[chlist[chindex]] > sat_thr[chlist[chindex]]).sum()
@@ -164,19 +167,13 @@ def saturated_integral(sat_length,b,e,chlist,chindex,params):
     
 def Analyze(df,rms,chlist,chindex,params):
 
-    search_ranges = eval(params['search_ranges'])
-
-    if(params['full_search']):
-        search_ranges[chlist[chindex]][0] = df['TIME'].min()
-        search_ranges[chlist[chindex]][1] = df['TIME'].max()
+    time_start = df['TIME'].iloc[0]
+    time_end = df['TIME'].iloc[-1]
     
-    time_start = search_ranges[chlist[chindex]][0]
-    time_end = search_ranges[chlist[chindex]][1]
-
     bin_width = (df['TIME'].iloc[1]-df['TIME'].iloc[0])
     
     # Reduce the search of the waveforms
-    df = df[(df['TIME'] > time_start) & (df['TIME'] < time_end)]
+    #df = df[(df['TIME'] > time_start) & (df['TIME'] < time_end)]
     
     # Full DataFrame with the boolean condition
     condition = df[chlist[chindex]] > params['nsigma'] * rms[chindex]
@@ -196,10 +193,11 @@ def Analyze(df,rms,chlist,chindex,params):
 
     t_length =[]
 
+    print(t_begin)
     #Calculate the lenght of the integration window
     if t_begin and t_end:
         t_begin.sort(),t_end.sort()
-        
+
     for b,e in zip(t_begin,t_end):
         t_length.append(e-b)
     
@@ -344,5 +342,27 @@ def RemoveNoiseFourier(wf,freq_cut):
         filtered_signal = ifft(yf).real
 
         wf[cols[i]]=filtered_signal
+
+
+def CreateWfSum(wf,params,baselines,baselinesRMS):
+
+
+    amp_factors = eval(params['amp_factors'])
+    avg_amp_factor = np.mean(list(amp_factors.values()))  # Average amplification factor
+    
+    if params["is_amplified"] == False:
+        # Calculate CHSum with amplification adjustments
+        wf['CHSum'] = sum(  wf[ch] / amp_factors[ch] * avg_amp_factor for ch in amp_factors.keys()  )
+    else:
+        # Simple sum of the channels
+        wf['CHSum'] = sum(wf[ch] for ch in amp_factors.keys())
+
+    baselines.append(0)
+    baselinesRMS.append(np.sqrt(sum(x**2 for x in baselinesRMS)))
+    
+    # Return the dataframe with the required columns
+    return wf[['TIME', 'CH1', 'CH2', 'CH3', 'CH4', 'CHSum', 'event']]
+
+
 
 
