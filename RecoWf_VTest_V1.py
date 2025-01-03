@@ -122,5 +122,8 @@ if __name__== '__main__':
         
     print(dic_time_begin)
     print(df_mast.head(50))
+
+    print(len(df_mast))
+    
     utility.PlotWfsTimestamps(wf,dic_time_begin,dic_time_length,baselinesRMS,params)
     
