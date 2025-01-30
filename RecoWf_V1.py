@@ -81,7 +81,8 @@ if __name__== '__main__':
         for i in range(len(ChList)):
             wf[ChList[i]]-=baselines[i]
 
-        wf=utility.CreateWfSum(wf,params,baselines,baselinesRMS) 
+        if(params["analyze_sum"]):
+            wf=utility.CreateWfSum(wf,params,baselines,baselinesRMS) 
         ChList = wf.columns[1:-1].tolist()
         
         dic_time_begin={}
