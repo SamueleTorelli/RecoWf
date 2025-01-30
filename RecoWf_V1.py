@@ -49,6 +49,7 @@ if __name__== '__main__':
     #Loop all over the events
     eventlist = np.unique(df["event"].to_list())
     
+    #for nev in eventlist:
     for nev in eventlist:
         if nev%10==0:
             print(nev)

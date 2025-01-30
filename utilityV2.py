@@ -51,7 +51,7 @@ def PlotWfs(wf,sfbegin,params):
     else:
         for i, ch in enumerate(wf.columns[1:-1].tolist()):    
             # Scatter plot for Channel 1
-            print(wf["TIME"].iloc[sfbegin[i]])
+            #print(wf["TIME"].iloc[sfbegin[i]])
             axs[i].scatter(wf["TIME"], wf[ch], label=ch, marker='o', s=1, edgecolors="red")
             axs[i].axvline(x=wf["TIME"].iloc[sfbegin[i]],linewidth=1, color='b')
             axs[i].axvline(x=wf["TIME"].iloc[sfbegin[i]+params["n_points_pre_wf"]],linewidth=1, color='r')
@@ -193,7 +193,7 @@ def Analyze(df,rms,chlist,chindex,params):
 
     t_length =[]
 
-    print(t_begin)
+    #print(t_begin)
     #Calculate the lenght of the integration window
     if t_begin and t_end:
         t_begin.sort(),t_end.sort()
@@ -308,7 +308,7 @@ def FindSignalFreeRegion(wf,params):
                 t_rms[j][0]=20+i
                 t_rms[j][1]=rms
 
-    print(t_rms)
+    #print(t_rms)
     
     time=[]
     rms=[]
