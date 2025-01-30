@@ -346,7 +346,7 @@ def RemoveNoiseFourier(wf,freq_cut):
 
 def CreateWfSum(wf,params,baselines,baselinesRMS):
 
-
+    
     amp_factors = eval(params['amp_factors'])
     avg_amp_factor = np.mean(list(amp_factors.values()))  # Average amplification factor
     
