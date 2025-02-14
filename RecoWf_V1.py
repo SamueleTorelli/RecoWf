@@ -5,6 +5,7 @@ import utilityV2 as utility
 import baseline_calV2 as baseline_cal
 import numpy as np
 from scipy.ndimage import gaussian_filter1d    
+from parser import parse_txt_to_dataframe
 import os
 import argparse
 import sys
@@ -37,8 +38,12 @@ if __name__== '__main__':
     baselines = []
     baselinesRMS=[]
 
-    df = pd.read_hdf(args.inputfile) 
-
+    if inputfile.endswith(".txt"):
+        print("Parsing dataframe...")
+        df = parse_txt_to_dataframe(inputfile)
+    else:
+        df = pd.read_hdf(inputfile)
+    
     while(df.columns[-1] != "event"):
         df = df.drop(columns=df.columns[-1])
             
