@@ -1,7 +1,6 @@
-
 {
     "variable_mean_rms" : false,          # If false, baseline and RMS are corrected using the mean value of the waveforms across the entire dataset.
-    
+
     "filter" : true,                      # Apply a mean filter to smooth the signal, with a kernel size of 15.
     
     "n_points_pre_wf" : 350,              # Number of waveform points used to calculate the mean and RMS for baseline correction.
