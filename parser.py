@@ -30,7 +30,7 @@ def parse_txt_to_dataframe(file_path):
         elif re.match(r'^\d+\s+-?\d+\.\d+', line):
             s, ch2 = line.split()
             s = int(s)
-            ch2 = float(ch2)
+            ch2 = float(ch2)/1000
             time = s * time_step/1e6
             data.append((time, ch2, event_num, event_time))
     

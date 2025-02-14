@@ -24,8 +24,7 @@ if __name__== '__main__':
     if not args.inputfile or not args.eventunmber or not args.config:
         print("python3.8 RwcoWF_VTest_V1.py -I /path/to/input/file -e eventumber -C configfile")
         sys.exit(1)
-    
-        
+            
     #Read analysis parameters from file
     with open(args.config) as f:
         # Preprocess to remove comments
@@ -36,14 +35,19 @@ if __name__== '__main__':
     inputfile=args.inputfile
     
     if inputfile.endswith(".txt"):
+        print("Parsing dataframe...")
         df = parse_txt_to_dataframe(inputfile)
     else:
         df = pd.read_hdf(inputfile)
 
     while(df.columns[-1] != "event"):
         df = df.drop(columns=df.columns[-1])
-    
-    wf = df[df["event"]==args.eventunmber].copy()
+
+    if inputfile.endswith(".txt"):
+        ev_list = df["event"].unique()
+        wf = wf = df[df["event"]==ev_list[args.eventunmber]].copy()
+    else:
+        wf = df[df["event"]==args.eventunmber].copy()
 
     while(wf.columns[-1] != "event"):
         wf = wf.drop(columns=wf.columns[-1])
@@ -84,8 +88,8 @@ if __name__== '__main__':
             wf[ChList[i]]-=baselines[i]
         print(baselines,baselinesRMS)
         
-
-    wf=utility.CreateWfSum(wf,params,baselines,baselinesRMS)
+    if(params["analyze_sum"]):
+        wf=utility.CreateWfSum(wf,params,baselines,baselinesRMS)
 
     ChList = wf.columns[1:-1].tolist() 
     
@@ -96,7 +100,6 @@ if __name__== '__main__':
     for ch in wf.columns[1:-1].tolist():
         dic_time_begin[ch]=[]
         dic_time_length[ch]=[]
-
             
     df_mast = pd.DataFrame(columns=['event','channel','time','time_len','integral'])
     
