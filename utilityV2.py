@@ -227,10 +227,12 @@ def Analyze(df,rms,chlist,chindex,params):
         #print(b,e,integral)
         
         amplitude.append( df_A[df_A['TIME']<e][chlist[chindex]].max())
-        npeaks.append(len(find_peaks(
-            df_A[df_A['TIME']<e][chlist[chindex]],
-            width=params['peaks_width'],height=params['peaks_height'])[0]))
 
+        peaks, properties = find_peaks( df_A[df_A['TIME']<e][chlist[chindex]],      height=params['peaks_height'])
+        print("peaks = ", int(len(peaks)))
+
+        npeaks.append(int(len(peaks)))
+        
     #print(chlist[chindex],is_sat)
         
     return t_begin,t_length,integral,amplitude,npeaks,is_sat
