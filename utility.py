@@ -85,9 +85,11 @@ def Analyze(df,rms,chlist,chindex,params):
         df_A=df[df['TIME']>b]
         integral.append( df_A[df_A['TIME']<e][chlist[chindex]].sum())
         amplitude.append( df_A[df_A['TIME']<e][chlist[chindex]].max())
-        npeaks.append(len(find_peaks(
-            df_A[df_A['TIME']<e][chlist[chindex]],
-            width=params['peaks_width'],height=params['peaks_height'])[0]))
+        peaks, properties = find_peaks( df_A[df_A['TIME']<e][chlist[chindex]],  height=params['peaks_height'])
+        npeaks.append(peaks)
+        print("Peaks: ", peaks)
+        
+        print(find_peaks(  df_A[df_A['TIME']<e][chlist[chindex]], height=params['peaks_height'] ) )
         
     return t_begin,t_length,integral,amplitude,npeaks
 

@@ -19,7 +19,7 @@
     
     "peaks_width": 40,                    # Expected width of peaks for the signal detection algorithm (find_peak function).
     
-    "peaks_height": 0.0005,                # Minimum height for detected peaks in the find_peak function.
+    "peaks_height": 0.02,                # Minimum height for detected peaks in the find_peak function.
 
     "fourier_filter": false,		   #Fourier noise filter
 

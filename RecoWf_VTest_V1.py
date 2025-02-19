@@ -5,7 +5,7 @@ import utilityV2 as utility
 import baseline_calV2 as baseline_cal
 import numpy as np
 from scipy.ndimage import gaussian_filter1d    
-from parser import parse_txt_to_dataframe
+from parser import parse_txt_to_dataframe_multich
 import os
 import argparse
 import sys
@@ -36,7 +36,7 @@ if __name__== '__main__':
     
     if inputfile.endswith(".txt"):
         print("Parsing dataframe...")
-        df = parse_txt_to_dataframe(inputfile)
+        df = parse_txt_to_dataframe_multich(inputfile)
     else:
         df = pd.read_hdf(inputfile)
 
@@ -124,7 +124,9 @@ if __name__== '__main__':
         aux['time_len'] = time_l
         aux['integral'] = integral
         aux['ampl'] = ampl
+        aux['npeak'] = npeaks
         aux['isSat'] = is_sat
+        
         
         df_mast = pd.concat([df_mast,aux],ignore_index=True) 
         
