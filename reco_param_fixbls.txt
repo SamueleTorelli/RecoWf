@@ -1,7 +1,7 @@
 {
-    "variable_mean_rms" : true,          # If false, baseline and RMS are corrected using the mean value of the waveforms across the entire dataset.
+    "variable_mean_rms" : false,          # If false, baseline and RMS are corrected using the mean value of the waveforms across the entire dataset.
 
-    "filter" : true,                      # Apply a mean filter to smooth the signal, with a kernel size of 15.
+    "filter" : false,                      # Apply a mean filter to smooth the signal, with a kernel size of 15.
     
     "n_points_pre_wf" : 80,              # Number of waveform points used to calculate the mean and RMS for baseline correction.
     
@@ -15,7 +15,7 @@
     
     "sat_corr" : false,                   # If true, apply a correction for signal saturation.
     
-    "nsigma" : 3,                      # Threshold for signal detection, defined as a multiple of the RMS noise (1.34 sigma).
+    "nsigma" : 1.34,                      # Threshold for signal detection, defined as a multiple of the RMS noise (1.34 sigma).
     
     "peaks_width": 40,                    # Expected width of peaks for the signal detection algorithm (find_peak function).
     
