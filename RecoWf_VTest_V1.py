@@ -5,7 +5,7 @@ import utilityV2 as utility
 import baseline_calV2 as baseline_cal
 import numpy as np
 from scipy.ndimage import gaussian_filter1d    
-from parser import parse_txt_to_dataframe_multich
+import parse_data
 import os
 import argparse
 import sys
@@ -35,15 +35,18 @@ if __name__== '__main__':
     inputfile=args.inputfile
     
     if inputfile.endswith(".txt"):
-        print("Parsing dataframe...")
-        df = parse_txt_to_dataframe_multich(inputfile)
+        print("Parsing dataframe from txt...")
+        df = parse_data.parse_txt_to_dataframe_multich(inputfile)
+    elif inputfile.endswith(".bin"):
+        print("Parsing dataframe from binary...") 
+        df = parse_data.parse_wf_from_binary(inputfile)
     else:
         df = pd.read_hdf(inputfile)
 
     while(df.columns[-1] != "event"):
         df = df.drop(columns=df.columns[-1])
 
-    if inputfile.endswith(".txt"):
+    if inputfile.endswith(".txt") or inputfile.endswith(".bin"):
         ev_list = df["event"].unique()
         wf = wf = df[df["event"]==ev_list[args.eventunmber]].copy()
     else:
