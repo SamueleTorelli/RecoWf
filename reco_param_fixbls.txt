@@ -3,7 +3,7 @@
 
     "filter" : false,                      # Apply a mean filter to smooth the signal, with a kernel size of 15.
     
-    "n_points_pre_wf" : 80,              # Number of waveform points used to calculate the mean and RMS for baseline correction.
+    "n_points_pre_wf" : 100,              # Number of waveform points used to calculate the mean and RMS for baseline correction.
     
     "full_window" : false,                # If true, the entire waveform window is integrated. If false, integration happens in a defined search window. (might be fixed)
     
