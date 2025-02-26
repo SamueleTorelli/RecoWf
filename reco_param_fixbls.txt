@@ -15,7 +15,7 @@
     
     "sat_corr" : false,                   # If true, apply a correction for signal saturation.
     
-    "nsigma" : 1.34,                      # Threshold for signal detection, defined as a multiple of the RMS noise (1.34 sigma).
+    "nsigma" : 3,                      # Threshold for signal detection, defined as a multiple of the RMS noise (1.34 sigma).
     
     "peaks_width": 40,                    # Expected width of peaks for the signal detection algorithm (find_peak function).
     

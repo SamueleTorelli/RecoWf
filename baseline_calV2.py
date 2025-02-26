@@ -3,6 +3,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 import glob
+from scipy.optimize import curve_fit
+
+# Define Gaussian function
+def gaussian(x, A, mu, sigma):
+    return A * np.exp(-0.5 * ((x - mu) / sigma) ** 2)
 
 # Function to calculate FWHM
 def calculate_fwhm(x, y):
@@ -51,10 +56,40 @@ def mean_baselane(final_df,params):
 
         print(minrangehisto,maxrangehisto)
 
-        hist, bins, _ = ax.hist(filtered_df[channel], bins=70, range=(minrangehisto, maxrangehisto),
+        hist, bins, _ = ax.hist(filtered_df[channel], bins=120, range=(minrangehisto, maxrangehisto),
                                 alpha=0.7, color='blue', edgecolor='black')
 
+        # Compute bin centers
+        bin_centers = (bins[:-1] + bins[1:]) / 2
         
+        # Find the index of the maximum bin
+        max_bin_idx = np.argmax(hist)
+        
+        # Define the range of bins to fit (20 bins around max)
+        bins_around = 16
+        fit_start = max(0, max_bin_idx - int(bins_around/2))
+        fit_end = min(len(hist), max_bin_idx + int(bins_around/2))
+        
+        # Select data for fitting
+        x_fit = bin_centers[fit_start:fit_end]
+        y_fit = hist[fit_start:fit_end]
+        
+        # Initial guess for Gaussian parameters [Amplitude, Mean, Standard Deviation]
+        p0 = [max(y_fit), bin_centers[max_bin_idx], (bins[1] - bins[0]) * 5]
+        
+        # Fit the Gaussian
+        popt, _ = curve_fit(gaussian, x_fit, y_fit, p0=p0)
+        
+        # Plot the Gaussian fit
+        x_smooth = np.linspace(x_fit[0], x_fit[-1], 300)
+        y_smooth = gaussian(x_smooth, *popt)
+        ax.plot(x_smooth, y_smooth, 'r-', label='Gaussian Fit')
+
+        # Draw vertical lines at fit range limits
+        ax.axvline(x_fit[0], color='green', linestyle='--', label='Fit Range')
+        ax.axvline(x_fit[-1], color='green', linestyle='--')
+        
+        """
         # Calculate FWHM and mode
         fwhm = calculate_fwhm(bins, hist)
         mean_value = np.average(bins[:-1], weights=hist)
@@ -62,8 +97,12 @@ def mean_baselane(final_df,params):
         
         mode_baseline.append(mode_value)
         hwhm_baseline.append(fwhm/2)
+        """
+        
+        mode_baseline.append(popt[1])
+        hwhm_baseline.append(popt[2])
 
-
+        """
         # Draw vertical lines for mode and FWHM
         ax.axvline(mode_value, color='red', linestyle=':', linewidth=2, label=f'Mode: {mode_value:.2e}')
         ax.axvline(mode_value - fwhm / 2, color='purple', linestyle='-.', linewidth=2)
@@ -72,6 +111,9 @@ def mean_baselane(final_df,params):
         # Add text annotations for the mode and FWHM
         ax.text(mode_value, max(hist) * 0.9, f'Mode: {mode_value:.2e}', color='red', ha='left', fontsize=9)
         ax.text(mode_value + fwhm / 2, max(hist) * 0.8, f'FWHM: {fwhm:.2e}', color='purple', ha='left', fontsize=9)
+        """
+
+        #print(f"Fit parameters: Amplitude={popt[0]:.2f}, Mean={popt[1]:.2f}, Sigma={popt[2]:.2f}")
 
         
         # Customize subplot

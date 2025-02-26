@@ -229,8 +229,7 @@ def Analyze(df,rms,chlist,chindex,params):
         amplitude.append( df_A[df_A['TIME']<e][chlist[chindex]].max())
 
         peaks, properties = find_peaks( df_A[df_A['TIME']<e][chlist[chindex]],      height=params['peaks_height'])
-        print("peaks = ", int(len(peaks)))
-
+        
         npeaks.append(int(len(peaks)))
         
     #print(chlist[chindex],is_sat)
