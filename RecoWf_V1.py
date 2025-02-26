@@ -38,14 +38,14 @@ if __name__== '__main__':
     baselines = []
     baselinesRMS=[]
 
-    if inputfile.endswith(".txt"):
+    if args.inputfile.endswith(".txt"):
         print("Parsing dataframe from txt...")
-        df = parse_data.parse_txt_to_dataframe_multich(inputfile)
-    elif inputfile.endswith(".bin"):
+        df = parse_data.parse_txt_to_dataframe_multich(args.inputfile)
+    elif args.inputfile.endswith(".bin"):
         print("Parsing dataframe from binary...") 
-        df = parse_data.parse_wf_from_binary(inputfile)
+        df = parse_data.parse_wf_from_binary(args.inputfile)
     else:
-        df = pd.read_hdf(inputfile)
+        df = pd.read_hdf(args.inputfile)
         
     while(df.columns[-1] != "event"):
         df = df.drop(columns=df.columns[-1])
