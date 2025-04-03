@@ -53,6 +53,10 @@ if __name__== '__main__':
     
     if(params["variable_mean_rms"]==False):
         baselines,baselinesRMS = baseline_cal.mean_baselane(df,params)
+
+    if(params["analyze_sum"]):
+        baselines.append(0)
+        baselinesRMS.append(np.sqrt(sum(x**2 for x in baselinesRMS)))
         
     #Loop all over the events
     eventlist = np.unique(df["event"].to_list())
@@ -64,11 +68,10 @@ if __name__== '__main__':
         
         #Open df
         wf = df[df["event"]==nev].copy()
-
                 
         ChList = wf.columns[1:-1].tolist()
         utility.replace_inf_with_max(wf,ChList)
-        
+
         #If true applies the Mean Filter to each channel
         if params['filter']==True:
             for i in range(len(ChList)):
@@ -86,13 +89,16 @@ if __name__== '__main__':
                 baselines.append(wf[ChList[chindex]].iloc[t_st:t_st + params["n_points_pre_wf"]].mean())
             baselinesRMS=sig_free_rms
 
+        print("check0",ChList)
         #Subtract baseline and calculate RMS
         for i in range(len(ChList)):
             wf[ChList[i]]-=baselines[i]
 
         if(params["analyze_sum"]):
-            wf=utility.CreateWfSum(wf,params,baselines,baselinesRMS) 
+            wf=utility.CreateWfSum(wf,params) 
         ChList = wf.columns[1:-1].tolist()
+
+        print("check1",ChList)
         
         dic_time_begin={}
         dic_time_length={}
@@ -128,11 +134,13 @@ if __name__== '__main__':
             aux['integral'] = integral
             aux['ampl'] = ampl
             aux['npeaks']= npeaks
-            aux['is_sat']= is_sat
-
+            #aux['is_sat']= is_sat
+            
             #Append the event dataframe to the main one
             #df_mast = df_mast.append(aux,ignore_index = True)
             df_mast = pd.concat([df_mast,aux],ignore_index=True)
+
+    df_mast = df_mast.dropna()
     print(df_mast.head(100))
 
     #Save DF

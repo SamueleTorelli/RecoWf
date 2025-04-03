@@ -67,7 +67,9 @@ if __name__== '__main__':
     baselines = []
     baselinesRMS=[]
 
-    utility.PlotWfs(wf,[0,0,0,0],params)
+    zeros_vector = [0] * len(ChList)
+    
+    utility.PlotWfs(wf,zeros_vector,params)
 
     if(params["fourier_filter"]):
         utility.RemoveNoiseFourier(wf,0.1e8)
@@ -128,7 +130,7 @@ if __name__== '__main__':
         aux['integral'] = integral
         aux['ampl'] = ampl
         aux['npeak'] = npeaks
-        aux['isSat'] = is_sat
+        #aux['isSat'] = is_sat
         
         
         df_mast = pd.concat([df_mast,aux],ignore_index=True) 
