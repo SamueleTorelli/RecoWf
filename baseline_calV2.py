@@ -44,19 +44,19 @@ def mean_baselane(final_df,params):
     hwhm_baseline = []
 
     #fig, axs = plt.subplots(len(channels), 1, figsize=(10, 15))
-    fig, axs = plt.subplots(2, 2, figsize=(12, 10))
+    fig, axs = plt.subplots(int(num_channels/4), 4, figsize=(12, 10))
     
     for i, channel in enumerate(channels):
-        ax = axs[i%2][i//2]  # Select the subplot
+        ax = axs[i%16][i//16]  # Select the subplot
         print(ax)
         # Setup histogram
 
         minrangehisto = filtered_df[filtered_df[channel]>-np.inf][channel].min()
         maxrangehisto = filtered_df[filtered_df[channel]<np.inf][channel].max()
 
-        print(minrangehisto,maxrangehisto)
+        print(channel,minrangehisto,maxrangehisto)
 
-        hist, bins, _ = ax.hist(filtered_df[channel], bins=120, range=(minrangehisto, maxrangehisto),
+        hist, bins, _ = ax.hist(filtered_df[channel], bins=40, range=(minrangehisto, maxrangehisto), #ORIGINAL 120
                                 alpha=0.7, color='blue', edgecolor='black')
 
         # Compute bin centers
@@ -66,7 +66,7 @@ def mean_baselane(final_df,params):
         max_bin_idx = np.argmax(hist)
         
         # Define the range of bins to fit (20 bins around max)
-        bins_around = 16
+        bins_around = 22 #ORIGINAL 16
         fit_start = max(0, max_bin_idx - int(bins_around/2))
         fit_end = min(len(hist), max_bin_idx + int(bins_around/2))
         
@@ -76,10 +76,13 @@ def mean_baselane(final_df,params):
         
         # Initial guess for Gaussian parameters [Amplitude, Mean, Standard Deviation]
         p0 = [max(y_fit), bin_centers[max_bin_idx], (bins[1] - bins[0]) * 5]
-        
-        # Fit the Gaussian
-        popt, _ = curve_fit(gaussian, x_fit, y_fit, p0=p0)
-        
+
+        try:
+            # Fit the Gaussian
+            popt, _ = curve_fit(gaussian, x_fit, y_fit, p0=p0)
+        except:
+            popt = [0,0,0]
+            
         # Plot the Gaussian fit
         x_smooth = np.linspace(x_fit[0], x_fit[-1], 300)
         y_smooth = gaussian(x_smooth, *popt)

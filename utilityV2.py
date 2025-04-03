@@ -208,7 +208,9 @@ def Analyze(df,rms,chlist,chindex,params):
     
     #Compute the integral
     for b,e in zip(t_begin, t_end):
+        """
         sat_len, sat_b, sat_e = is_saturated(df,b,e,chlist,chindex,params) 
+
 
         if(sat_len):
             is_sat.append(True)
@@ -220,7 +222,8 @@ def Analyze(df,rms,chlist,chindex,params):
         else:
             is_sat.append(False)
             corr_int = 0
-                      
+        """           
+        corr_int=0
         df_A=df[df['TIME']>b]
         #print(f"int = {(df_A[df_A['TIME']<e][chlist[chindex]].sum())*bin_width}, corr={corr_int}")
         integral.append( (df_A[df_A['TIME']<e][chlist[chindex]].sum())*bin_width+corr_int)
@@ -345,9 +348,10 @@ def RemoveNoiseFourier(wf,freq_cut):
         wf[cols[i]]=filtered_signal
 
 
-def CreateWfSum(wf,params,baselines,baselinesRMS):
+def CreateWfSum(wf,params):
 
-    
+    ChList = wf.columns[1:-1].tolist() 
+
     amp_factors = eval(params['amp_factors'])
     avg_amp_factor = np.mean(list(amp_factors.values()))  # Average amplification factor
     
@@ -356,13 +360,10 @@ def CreateWfSum(wf,params,baselines,baselinesRMS):
         wf['CHSum'] = sum(  wf[ch] / amp_factors[ch] * avg_amp_factor for ch in amp_factors.keys()  )
     else:
         # Simple sum of the channels
-        wf['CHSum'] = sum(wf[ch] for ch in amp_factors.keys())
-
-    baselines.append(0)
-    baselinesRMS.append(np.sqrt(sum(x**2 for x in baselinesRMS)))
-    
+        wf['CHSum'] = sum(wf[ch] for ch in ChList)
+            
     # Return the dataframe with the required columns
-    return wf[['TIME', 'CH1', 'CH2', 'CH3', 'CH4', 'CHSum', 'event']]
+    return wf[['TIME']+ ChList +['CHSum', 'event']]
 
 
 

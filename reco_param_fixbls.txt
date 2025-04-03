@@ -27,5 +27,5 @@
     
     "amp_factors": "{'CH1': 535, 'CH2': 537, 'CH3': 536, 'CH4': 675}",	#amplification factors
 
-    "analyze_sum": false
+    "analyze_sum": true
 }
