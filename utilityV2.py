@@ -35,7 +35,7 @@ def replace_inf_with_max(wf, columns):
             wf[column] = wf[column].replace([-np.inf], min_value)
 
 
-            
+"""            
 def PlotWfs(wf,sfbegin,params):
     # Create a figure with four subplots
     fig, axs = plt.subplots(len(wf.columns[1:-1].tolist()), 1, figsize=(10, 5), sharex=True)
@@ -63,7 +63,48 @@ def PlotWfs(wf,sfbegin,params):
     
     # Show the plot
     plt.show()
+"""
 
+def PlotWfs(wf, sfbegin, params):
+    channels = wf.columns[1:-1].tolist()
+    n_channels = len(channels)
+    
+    # Calculate number of rows needed (4 plots per row)
+    n_rows = (n_channels + 3) // 4  # Equivalent to math.ceil(n_channels / 4)
+    
+    # Create a figure with subplots arranged in 4 columns
+    fig, axs = plt.subplots(n_rows, 4, figsize=(20, n_rows), sharex=True)
+    
+    # If there's only one row, axs will be 1D
+    if n_rows == 1:
+        axs = axs.reshape(1, -1)
+    
+    # Flatten the axs array for easier iteration
+    axs_flat = axs.flatten()
+    
+    for i, ch in enumerate(channels):
+        # Scatter plot for each channel
+        axs_flat[i].scatter(wf["TIME"], wf[ch], label=ch, marker='o', s=1, edgecolors="red")
+        axs_flat[i].axvline(x=wf["TIME"].iloc[sfbegin[i]], linewidth=1, color='b')
+        axs_flat[i].axvline(x=wf["TIME"].iloc[sfbegin[i]+params["n_points_pre_wf"]], linewidth=1, color='r')
+        axs_flat[i].set_ylabel('V [V]')
+        axs_flat[i].set_ylim(0,0.006)
+        axs_flat[i].legend()
+    
+    # Hide any empty subplots
+    for j in range(i+1, len(axs_flat)):
+        axs_flat[j].axis('off')
+    
+    # Set the title for the entire figure
+    fig.suptitle('Voltage vs time', y=1.02)
+    
+    # Adjust layout to prevent overlap
+    plt.tight_layout()
+    
+    # Show the plot
+    plt.show()
+    
+    
 def plot_scaled_phe( chlist, chindex, A_mid, b, e, sat_thr):
     # Extract the relevant DataFrame
     df = pheshape[chlist[chindex]]
@@ -257,10 +298,10 @@ def IntegrateFullWindow(df,rms,chlist,chindex,params):
     t_length.append(-99)
 
     return t_begin,t_length,integral,amplitude
-
+"""
 def PlotWfsTimestamps(wf,dic,dic_len,rms,par):
     # Create a figure with four subplots
-    fig, axs = plt.subplots(len(wf.columns[1:-1].tolist()), 1, figsize=(7, 5), sharex=True)
+    fig, axs = plt.subplots(len(wf.columns[1:-1].tolist()), 1, figsize=(5, 10), sharex=True)
 
     if(len(wf.columns[1:-1].tolist())==1):
         ch=wf.columns[1:-1].tolist()
@@ -288,8 +329,57 @@ def PlotWfsTimestamps(wf,dic,dic_len,rms,par):
     
     # Show the plot
     plt.show()
+"""
 
 
+def PlotWfsTimestamps(wf, dic, dic_len, rms, par):
+    channels = wf.columns[1:-1].tolist()
+    n_channels = len(channels)
+    
+    # Calculate number of rows needed (4 plots per row)
+    n_rows = (n_channels + 3) // 4  # Equivalent to math.ceil(n_channels / 4)
+    
+    # Create a figure with subplots arranged in 4 columns
+    fig, axs = plt.subplots(n_rows, 4, figsize=(20, n_rows), sharex=True)
+    
+    # If there's only one row, axs will be 1D
+    if n_rows == 1:
+        axs = axs.reshape(1, -1)
+    
+    # Flatten the axs array for easier iteration
+    axs_flat = axs.flatten()
+    
+    for i, ch in enumerate(channels):
+        # Scatter plot for each channel
+        axs_flat[i].scatter(wf["TIME"], wf[ch], label=ch, marker='.', s=1, edgecolors='black')
+        
+        # Add vertical lines for each timestamp
+        for j in range(len(dic[ch])):
+            axs_flat[i].axvline(x=dic[ch][j], linewidth=1, color='b')
+            axs_flat[i].axvline(x=dic[ch][j]+dic_len[ch][j], linewidth=.3, color='r')
+        
+        # Add horizontal line for RMS threshold
+        axs_flat[i].axhline(y=par["nsigma"]*rms[i])
+        axs_flat[i].set_ylabel('V [V]')
+        axs_flat[i].legend()
+        axs_flat[i].set_ylim(-0.001,0.006)
+        
+    # Hide any empty subplots
+    for j in range(i+1, len(axs_flat)):
+        axs_flat[j].axis('off')
+    
+    # Set the title for the entire figure
+    fig.suptitle('Voltage vs time', y=1.02)
+    
+    # Adjust layout to prevent overlap
+    plt.tight_layout()
+    
+    # Show the plot
+    plt.show()
+    
+
+
+    
 def MeanFilter(ser,kern_size):
 
     #Apply a mean filter to the waveform

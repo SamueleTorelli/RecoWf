@@ -60,17 +60,21 @@ if __name__== '__main__':
 
     utility.replace_inf_with_max(wf,ChList)
 
-    if params["filter"]==True:
-        for i in range(len(ChList)):
-            wf[ChList[i]]=utility.MeanFilter(wf[ChList[i]],10)
-
-    baselines = []
-    baselinesRMS=[]
-
     zeros_vector = [0] * len(ChList)
-    
+    utility.PlotWfs(wf,zeros_vector,params)        
+
+    if params["filter"]==True:
+        ker_size=20
+        for i in range(len(ChList)):
+            wf[ChList[i]]=utility.MeanFilter(wf[ChList[i]],ker_size)
+        wf = wf.iloc[ker_size:-1*ker_size]
+
     utility.PlotWfs(wf,zeros_vector,params)
 
+        
+    baselines = []
+    baselinesRMS=[]
+    
     if(params["fourier_filter"]):
         utility.RemoveNoiseFourier(wf,0.1e8)
         utility.PlotWfs(wf,[0,0,0,0],params)
@@ -92,10 +96,13 @@ if __name__== '__main__':
         for i in range(len(ChList)):
             wf[ChList[i]]-=baselines[i]
         print(baselines,baselinesRMS)
-        
+
+
     if(params["analyze_sum"]):
         wf=utility.CreateWfSum(wf,params,baselines,baselinesRMS)
 
+
+        
     ChList = wf.columns[1:-1].tolist() 
     
     dic_time_begin={}
