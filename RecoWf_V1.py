@@ -74,6 +74,7 @@ if __name__== '__main__':
 
         #If true applies the Mean Filter to each channel
         if params['filter']==True:
+            ker_size=20
             for i in range(len(ChList)):
                 wf[ChList[i]]=utility.MeanFilter(wf[ChList[i]],20)
             wf = wf.iloc[ker_size:-1*ker_size]

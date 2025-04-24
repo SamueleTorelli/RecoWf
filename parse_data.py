@@ -139,5 +139,5 @@ def parse_wf_from_binary(filename):
     print(nlines,nevents)
     df = pd.DataFrame(data_list)
     df.insert(0, 'TIME', (df.index % size + 1) * sampl_time/1e9)  # Time in microseconds
-    df.to_csv("tempdata/test.csv")
+
     return df
