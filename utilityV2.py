@@ -88,7 +88,7 @@ def PlotWfs(wf, sfbegin, params):
         axs_flat[i].axvline(x=wf["TIME"].iloc[sfbegin[i]], linewidth=1, color='b')
         axs_flat[i].axvline(x=wf["TIME"].iloc[sfbegin[i]+params["n_points_pre_wf"]], linewidth=1, color='r')
         axs_flat[i].set_ylabel('V [V]')
-        axs_flat[i].set_ylim(0,0.006)
+        #axs_flat[i].set_ylim(0,0.006)
         axs_flat[i].legend()
     
     # Hide any empty subplots
@@ -362,7 +362,7 @@ def PlotWfsTimestamps(wf, dic, dic_len, rms, par):
         axs_flat[i].axhline(y=par["nsigma"]*rms[i])
         axs_flat[i].set_ylabel('V [V]')
         axs_flat[i].legend()
-        axs_flat[i].set_ylim(-0.001,0.006)
+        #axs_flat[i].set_ylim(-0.001,0.006)
         
     # Hide any empty subplots
     for j in range(i+1, len(axs_flat)):

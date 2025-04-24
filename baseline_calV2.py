@@ -43,20 +43,25 @@ def mean_baselane(final_df,params):
     mode_baseline = []
     hwhm_baseline = []
 
-    #fig, axs = plt.subplots(len(channels), 1, figsize=(10, 15))
-    fig, axs = plt.subplots(int(num_channels/4), 4, figsize=(12, 10))
+    cols = 4 if num_channels > 1 else 1
+    rows = int(np.ceil(num_channels / cols))
+    
+    fig, axs = plt.subplots(rows, cols, figsize=(4 * cols, 3 * rows))
+
+    if isinstance(axs, np.ndarray):
+        axs = axs.flatten()
+    else:
+        axs = [axs]
     
     for i, channel in enumerate(channels):
-        ax = axs[i%16][i//16]  # Select the subplot
-        print(ax)
-        # Setup histogram
-
+        ax = axs[i]
+        
         minrangehisto = filtered_df[filtered_df[channel]>-np.inf][channel].min()
         maxrangehisto = filtered_df[filtered_df[channel]<np.inf][channel].max()
 
         print(channel,minrangehisto,maxrangehisto)
 
-        hist, bins, _ = ax.hist(filtered_df[channel], bins=40, range=(minrangehisto, maxrangehisto), #ORIGINAL 120
+        hist, bins, _ = ax.hist(filtered_df[channel], bins=100, range=(minrangehisto, maxrangehisto), #ORIGINAL 120
                                 alpha=0.7, color='blue', edgecolor='black')
 
         # Compute bin centers
