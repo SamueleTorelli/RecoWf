@@ -42,7 +42,7 @@ if __name__== '__main__':
         df = parse_data.parse_wf_from_binary(inputfile)
     else:
         df = pd.read_hdf(inputfile)
-
+    print(df.head(40))
     while(df.columns[-1] != "event"):
         df = df.drop(columns=df.columns[-1])
 

@@ -34,12 +34,11 @@ def parse_txt_to_dataframe(file_path):
             ch2 = float(ch2)/1000
             time = s * time_step/1e6
             data.append((time, ch2, event_num, event_time))
-    
+            
     # Create DataFrame
     df = pd.DataFrame(data, columns=["TIME", "CH2", "event", "event_time"])
     return df
-
-
+ 
 def parse_txt_to_dataframe_multich(file_path):
     data = []
     with open(file_path, 'r') as f:
@@ -76,7 +75,7 @@ def parse_txt_to_dataframe_multich(file_path):
             time = s * time_step / 1e6
             ch_values = [float(v) / 1000 for v in values[1:]]
             data.append((time, *ch_values, event_num, event_time))
-
+        
     # Create DataFrame
     column_names = ["TIME"] + channels + ["event", "event_time"]
     df = pd.DataFrame(data, columns=column_names)
