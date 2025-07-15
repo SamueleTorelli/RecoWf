@@ -454,7 +454,7 @@ def CreateWfSum(wf,params):
     amp_factors = eval(params['amp_factors'])
     avg_amp_factor = np.mean(list(amp_factors.values()))  # Average amplification factor
     
-    if params["is_amplified"] == False:
+    if params["is_amplified"] == True:
         # Calculate CHSum with amplification adjustments
         wf['CHSum'] = sum(  wf[ch] / amp_factors[ch] * avg_amp_factor for ch in amp_factors.keys()  )
     else:
