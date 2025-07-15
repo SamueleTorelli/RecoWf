@@ -348,7 +348,15 @@ def PlotWfsTimestamps(wf, dic, dic_len, rms, par):
     
     # Flatten the axs array for easier iteration
     axs_flat = axs.flatten()
-    
+
+    minyrange =[]
+    maxyrange= []
+    for i, ch in enumerate(channels):
+        if(ch != "CHSum"):
+            print(ch)
+            minyrange.append(min(wf[ch]))
+            maxyrange.append(max(wf[ch]))
+        
     for i, ch in enumerate(channels):
         # Scatter plot for each channel
         axs_flat[i].scatter(wf["TIME"], wf[ch], label=ch, marker='.', s=1, edgecolors='black')
@@ -362,7 +370,8 @@ def PlotWfsTimestamps(wf, dic, dic_len, rms, par):
         axs_flat[i].axhline(y=par["nsigma"]*rms[i])
         axs_flat[i].set_ylabel('V [V]')
         axs_flat[i].legend()
-        #axs_flat[i].set_ylim(-0.001,0.006)
+        if(ch != "CHSum"):
+            axs_flat[i].set_ylim(min(minyrange)-0.001, max(maxyrange)+0.001)
         
     # Hide any empty subplots
     for j in range(i+1, len(axs_flat)):
