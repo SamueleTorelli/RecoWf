@@ -99,9 +99,9 @@ if __name__== '__main__':
 
 
     if(params["analyze_sum"]):
-        wf=utility.CreateWfSum(wf,params,baselines,baselinesRMS)
-
-
+        wf=utility.CreateWfSum(wf,params)
+        baselines.append(0)
+        baselinesRMS.append(np.sqrt(np.sum(np.square(baselinesRMS))) / np.sqrt(len(baselinesRMS)))
         
     ChList = wf.columns[1:-1].tolist() 
     

@@ -56,7 +56,7 @@ if __name__== '__main__':
 
     if(params["analyze_sum"]):
         baselines.append(0)
-        baselinesRMS.append(np.sqrt(sum(x**2 for x in baselinesRMS)))
+        baselinesRMS.append(np.sqrt(np.sum(np.square(baselinesRMS))) / np.sqrt(len(baselinesRMS)))
         
     #Loop all over the events
     eventlist = np.unique(df["event"].to_list())
