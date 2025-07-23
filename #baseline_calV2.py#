@@ -22,7 +22,6 @@ def calculate_fwhm(x, y):
 
 
 def mean_baselane(final_df,params):
-
         
     # Define the TIME range for filtering
     time_range_start = final_df['TIME'].iloc[0]

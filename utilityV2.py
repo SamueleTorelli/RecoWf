@@ -68,17 +68,18 @@ def PlotWfs(wf,sfbegin,params):
 def PlotWfs(wf, sfbegin, params):
     channels = wf.columns[1:-1].tolist()
     n_channels = len(channels)
-    
+
     # Calculate number of rows needed (4 plots per row)
     n_rows = (n_channels + 3) // 4  # Equivalent to math.ceil(n_channels / 4)
     
     # Create a figure with subplots arranged in 4 columns
     fig, axs = plt.subplots(n_rows, 4, figsize=(20, n_rows), sharex=True)
-    
+
+    """
     # If there's only one row, axs will be 1D
     if n_rows == 1:
         axs = axs.reshape(1, -1)
-    
+    """
     # Flatten the axs array for easier iteration
     axs_flat = axs.flatten()
     
@@ -454,7 +455,7 @@ def CreateWfSum(wf,params):
     amp_factors = eval(params['amp_factors'])
     avg_amp_factor = np.mean(list(amp_factors.values()))  # Average amplification factor
     
-    if params["is_amplified"] == False:
+    if params["is_amplified"] == True:
         # Calculate CHSum with amplification adjustments
         wf['CHSum'] = sum(  wf[ch] / amp_factors[ch] * avg_amp_factor for ch in amp_factors.keys()  )
     else:
@@ -465,5 +466,9 @@ def CreateWfSum(wf,params):
     return wf[['TIME']+ ChList +['CHSum', 'event']]
 
 
-
-
+def flip_polarity(wf, ChList):
+    
+    for ch in ChList:
+        wf[ch] = -wf[ch]
+    
+    return wf
