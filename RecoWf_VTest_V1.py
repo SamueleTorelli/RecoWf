@@ -40,18 +40,20 @@ if __name__== '__main__':
     elif inputfile.endswith(".bin"):
         print("Parsing dataframe from binary...") 
         df = parse_data.parse_wf_from_binary(inputfile)
-    else:
+    elif inputfile.endswith(".h5"):
         df = pd.read_hdf(inputfile)
-    print(df.head(40))
+    else:
+        df = pd.read_csv(inputfile)
+        
     while(df.columns[-1] != "event"):
         df = df.drop(columns=df.columns[-1])
 
-    if inputfile.endswith(".txt") or inputfile.endswith(".bin"):
+    if inputfile.endswith(".txt") or inputfile.endswith(".bin") or inputfile.endswith(".csv"):
         ev_list = df["event"].unique()
         wf = wf = df[df["event"]==ev_list[args.eventunmber]].copy()
     else:
         wf = df[df["event"]==args.eventunmber].copy()
-
+        
     while(wf.columns[-1] != "event"):
         wf = wf.drop(columns=wf.columns[-1])
 
@@ -60,6 +62,9 @@ if __name__== '__main__':
 
     utility.replace_inf_with_max(wf,ChList)
 
+    if(params["polarity"] == "negative"):
+        wf = utility.flip_polarity(wf,ChList)
+    
     zeros_vector = [0] * len(ChList)
     utility.PlotWfs(wf,zeros_vector,params)        
 
@@ -93,6 +98,8 @@ if __name__== '__main__':
         utility.PlotWfs(wf,sig_free_time,params)
     else:
         baselines,baselinesRMS = baseline_cal.mean_baselane(df,params)
+        if(params['polarity'] == "negative"):
+            baselines=[-x for x in baselines]
         for i in range(len(ChList)):
             wf[ChList[i]]-=baselines[i]
         print(baselines,baselinesRMS)
@@ -101,7 +108,7 @@ if __name__== '__main__':
     if(params["analyze_sum"]):
         wf=utility.CreateWfSum(wf,params)
         baselines.append(0)
-        baselinesRMS.append(np.sqrt(np.sum(np.square(baselinesRMS))) / np.sqrt(len(baselinesRMS)))
+        baselinesRMS.append(np.sqrt(np.sum(np.square(baselinesRMS))) )
         
     ChList = wf.columns[1:-1].tolist() 
     
