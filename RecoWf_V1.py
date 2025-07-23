@@ -44,8 +44,10 @@ if __name__== '__main__':
     elif args.inputfile.endswith(".bin"):
         print("Parsing dataframe from binary...") 
         df = parse_data.parse_wf_from_binary(args.inputfile)
+    elif inputfile.endswith(".h5"):
+        df = pd.read_hdf(inputfile)
     else:
-        df = pd.read_hdf(args.inputfile)
+        df = pd.read_csv(inputfile)
         
     while(df.columns[-1] != "event"):
         df = df.drop(columns=df.columns[-1])
@@ -53,10 +55,12 @@ if __name__== '__main__':
     
     if(params["variable_mean_rms"]==False):
         baselines,baselinesRMS = baseline_cal.mean_baselane(df,params)
-
+        if(params['polarity'] == "negative"):
+            baselines=[-x for x in baselines]
+        
     if(params["analyze_sum"]):
         baselines.append(0)
-        baselinesRMS.append(np.sqrt(np.sum(np.square(baselinesRMS))) / np.sqrt(len(baselinesRMS)))
+        baselinesRMS.append(np.sqrt(np.sum(np.square(baselinesRMS))))
         
     #Loop all over the events
     eventlist = np.unique(df["event"].to_list())
@@ -72,6 +76,9 @@ if __name__== '__main__':
         ChList = wf.columns[1:-1].tolist()
         utility.replace_inf_with_max(wf,ChList)
 
+        if(params["polarity"] == "negative"):
+            wf = utility.flip_polarity(wf,ChList)
+        
         #If true applies the Mean Filter to each channel
         if params['filter']==True:
             ker_size=20
