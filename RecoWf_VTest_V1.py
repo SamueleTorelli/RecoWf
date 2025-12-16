@@ -37,14 +37,21 @@ if __name__== '__main__':
     if inputfile.endswith(".txt"):
         print("Parsing dataframe from txt...")
         df = parse_data.parse_txt_to_dataframe_multich(inputfile)
+
     elif inputfile.endswith(".bin"):
         print("Parsing dataframe from binary...") 
-        df = parse_data.parse_wf_from_binary(inputfile)
+        df = parse_data.load_waveforms_until_eof(inputfile,
+        channels=params['nchannels'],
+        samples_per_waveform=params['sample_points'])
+        df = parse_data.waveforms_to_dataframe_reverse(df[0])
+
     elif inputfile.endswith(".h5"):
         df = pd.read_hdf(inputfile)
+
     else:
         df = pd.read_csv(inputfile)
-        
+
+
     while(df.columns[-1] != "event"):
         df = df.drop(columns=df.columns[-1])
 
