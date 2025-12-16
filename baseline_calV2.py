@@ -22,7 +22,6 @@ def calculate_fwhm(x, y):
 
 
 def mean_baselane(final_df,params):
-
         
     # Define the TIME range for filtering
     time_range_start = final_df['TIME'].iloc[0]
@@ -68,8 +67,18 @@ def mean_baselane(final_df,params):
         
         print(channel,minrangehisto,maxrangehisto)
 
-        hist, bins, _ = ax.hist(filtered_df[channel], bins=450, range=(0.5*min(rangedown), 0.5*max(rangeup)), #ORIGINAL 120
-                                alpha=0.7, color='blue', edgecolor='black')
+        values = filtered_df[channel]
+
+        n_bins = 80
+
+        hist, bins, _ = ax.hist(
+            values,
+            bins=n_bins,
+            range=(rangedown[i], rangeup[i]),
+            alpha=0.7,
+            color="blue",
+            edgecolor="black"
+        )
 
         # Compute bin centers
         bin_centers = (bins[:-1] + bins[1:]) / 2
@@ -82,27 +91,52 @@ def mean_baselane(final_df,params):
         fit_start = max(0, max_bin_idx - int(bins_around/2))
         fit_end = min(len(hist), max_bin_idx + int(bins_around/2))
         
-        # Select data for fitting
+        # Select data for initial fitting
         x_fit = bin_centers[fit_start:fit_end]
         y_fit = hist[fit_start:fit_end]
-        
-        # Initial guess for Gaussian parameters [Amplitude, Mean, Standard Deviation]
+
+        # Initial guess [Amplitude, Mean, Sigma]
         p0 = [max(y_fit), bin_centers[max_bin_idx], (bins[1] - bins[0]) * 5]
 
         try:
-            # Fit the Gaussian
             popt, _ = curve_fit(gaussian, x_fit, y_fit, p0=p0)
-        except:
-            popt = [0,0,0]
-            
+        except RuntimeError:
+            popt = [0.0, 0.0, 0.0]
+
+        A, mu, sigma = popt
+
+            # Define ±2σ window
+        mask_2sigma = (bin_centers >= mu - 2*sigma) & (bin_centers <= mu + 2*sigma)
+
+        x_fit_2s = bin_centers[mask_2sigma]
+        y_fit_2s = hist[mask_2sigma]
+
+        # Use previous fit as starting point
+        p0_refined = popt
+
+        try:
+            popt, _ = curve_fit(
+                gaussian,
+                x_fit_2s,
+                y_fit_2s,
+                p0=p0_refined
+            )
+        except RuntimeError:
+            popt = popt
+                    
         # Plot the Gaussian fit
         x_smooth = np.linspace(x_fit[0], x_fit[-1], 300)
         y_smooth = gaussian(x_smooth, *popt)
-        ax.plot(x_smooth, y_smooth, 'r-', label='Gaussian Fit')
+        a_label = (
+            rf"Gaussian Fit "
+            rf"$\mu$={mu:.3f}, "
+            rf"$\sigma$={sigma:.3f})"
+        )
+        ax.plot(x_smooth, y_smooth, 'r-', label=a_label)
 
         # Draw vertical lines at fit range limits
-        ax.axvline(x_fit[0], color='green', linestyle='--', label='Fit Range')
-        ax.axvline(x_fit[-1], color='green', linestyle='--')
+        ax.axvline(x_fit_2s[0], color='green', linestyle='--', label='Fit Range')
+        ax.axvline(x_fit_2s[-1], color='green', linestyle='--')
         
         """
         # Calculate FWHM and mode
@@ -130,12 +164,12 @@ def mean_baselane(final_df,params):
 
         #print(f"Fit parameters: Amplitude={popt[0]:.2f}, Mean={popt[1]:.2f}, Sigma={popt[2]:.2f}")
 
-        
         # Customize subplot
         ax.set_title(f'Channel: {channel}')
         ax.set_xlabel('Value')
         ax.set_ylabel('Density')
         ax.grid(True)
+        ax.legend(fontsize=5)
         
         # Show the plots
     plt.show()
@@ -143,4 +177,32 @@ def mean_baselane(final_df,params):
 
     return mode_baseline,hwhm_baseline
 
+
+def min_difference_binning(data, data_range=None, min_bins=1):
+    data = np.asarray(data)
+    data = data[~np.isnan(data)]
+
+    if data.size < 2:
+        raise ValueError("Not enough data points for binning")
+
+    # Sort and compute differences
+    sorted_data = np.sort(data)
+    diffs = np.diff(sorted_data)
+
+    # Remove zero differences (repeated values)
+    diffs = diffs[diffs > 0]
+
+    if diffs.size == 0:
+        # All values identical
+        return min_bins
+
+    bin_width = diffs.min()
+
+    if data_range is None:
+        data_min, data_max = sorted_data[0], sorted_data[-1]
+    else:
+        data_min, data_max = data_range
+
+    n_bins = int(np.ceil((data_max - data_min) / bin_width))
+    return max(n_bins, min_bins)
 

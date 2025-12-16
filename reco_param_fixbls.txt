@@ -3,7 +3,7 @@
 
     "filter" : true,                      # Apply a mean filter to smooth the signal, with a kernel size of 15.
     
-    "n_points_pre_wf" : 550,              # Number of waveform points used to calculate the mean and RMS for baseline correction.
+    "n_points_pre_wf" : 20,              # Number of waveform points used to calculate the mean and RMS for baseline correction.
     
     "full_window" : false,                # If true, the entire waveform window is integrated. If false, integration happens in a defined search window. (might be fixed)
     
@@ -19,7 +19,7 @@
     
     "peaks_width": 40,                    # Expected width of peaks for the signal detection algorithm (find_peak function).
     
-    "peaks_height": 0.02,                # Minimum height for detected peaks in the find_peak function.
+    "peaks_height": 250,                # Minimum height for detected peaks in the find_peak function.
 
     "fourier_filter": false,		   #Fourier noise filter
 
@@ -27,7 +27,11 @@
 
     "amp_factors": "{'CH1': 348, 'CH2': 373, 'CH3': 347, 'CH4': 361}",	#amplification factors
 
-    "analyze_sum": true,
+    "analyze_sum": false,
 
-    "polarity" : "negative" # can be positive or negative
+    "polarity" : "positive",   #can be positive or negative
+
+    "sample_points": 1124,
+
+    "nchannels": 10  
 }
