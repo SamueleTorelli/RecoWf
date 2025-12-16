@@ -43,7 +43,7 @@ if __name__== '__main__':
         df = parse_data.load_waveforms_until_eof(inputfile,
         channels=params['nchannels'],
         samples_per_waveform=params['sample_points'])
-        df = parse_data.waveforms_to_dataframe_reverse(df[0])
+        df = parse_data.waveforms_to_dataframe(df[0])
 
     elif inputfile.endswith(".h5"):
         df = pd.read_hdf(inputfile)

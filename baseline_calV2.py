@@ -125,7 +125,7 @@ def mean_baselane(final_df,params):
             popt = popt
                     
         # Plot the Gaussian fit
-        x_smooth = np.linspace(x_fit[0], x_fit[-1], 300)
+        x_smooth = np.linspace(x_fit_2s[0], x_fit_2s[-1], 300)
         y_smooth = gaussian(x_smooth, *popt)
         a_label = (
             rf"Gaussian Fit "
