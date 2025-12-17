@@ -246,40 +246,31 @@ def Analyze(df,rms,chlist,chindex,params):
     integral = []
     amplitude = []
     npeaks = []
+    c_times = []
     is_sat = []
     
-    #Compute the integral
-    for b,e in zip(t_begin, t_end):
-        """
-        sat_len, sat_b, sat_e = is_saturated(df,b,e,chlist,chindex,params) 
-
-
-        if(sat_len):
-            is_sat.append(True)
-
-            if(params['sat_corr']):
-                corr_int = saturated_integral(sat_len,sat_b,sat_e,chlist,chindex,params)
-            else:
-                corr_int=0
-        else:
-            is_sat.append(False)
-            corr_int = 0
-        """           
-        corr_int=0
-        df_A=df[df['TIME']>b]
-        #print(f"int = {(df_A[df_A['TIME']<e][chlist[chindex]].sum())*bin_width}, corr={corr_int}")
-        integral.append( (df_A[df_A['TIME']<e][chlist[chindex]].sum())*bin_width+corr_int)
-        #print(b,e,integral)
+    # Compute integral, amplitude, and peak count within each [b, e) interval directly and clearly
+    for b, e in zip(t_begin, t_end):
+        mask = (df['TIME'] > b) & (df['TIME'] < e)
+        data_in_window = df.loc[mask, chlist[chindex]]
         
-        amplitude.append( df_A[df_A['TIME']<e][chlist[chindex]].max())
-
-        peaks, properties = find_peaks( df_A[df_A['TIME']<e][chlist[chindex]],      height=params['peaks_height'])
+        # Integral over the window
+        interval_integral = data_in_window.sum() * bin_width
+        integral.append(interval_integral)
         
+        # Amplitude (max) in window
+        amplitude.append(data_in_window.max() if not data_in_window.empty else np.nan)
+        
+        # Number of peaks in window
+        peaks, properties = find_peaks(data_in_window, height=params['peaks_height'])
         npeaks.append(int(len(peaks)))
-        
+
+        if(params["zero_crossing"]):
+            c_time = calculate_zero_crossing_time(data_in_window, plot=True)
+            c_times.append(c_time)
     #print(chlist[chindex],is_sat)
         
-    return t_begin,t_length,integral,amplitude,npeaks,is_sat
+    return t_begin,t_length,integral,amplitude,npeaks,c_times 
 
 
 def IntegrateFullWindow(df,rms,chlist,chindex,params):
@@ -472,3 +463,113 @@ def flip_polarity(wf, ChList):
         wf[ch] = -wf[ch]
     
     return wf
+
+
+def calculate_zero_crossing_time(data_in_window, plot=False):
+    """
+    Calculate the time where a linear fit intercepts zero.
+    Fits a line from the beginning of the window to the first local maximum.
+    
+    Parameters:
+    -----------
+    data_in_window : pandas.Series
+        Series with index as x values and series values as y values
+    params : dict
+        Parameters dictionary (not used currently, kept for compatibility)
+    plot : bool, optional
+        If True, plots the data points, fitted line, and zero crossing point
+    
+    Returns:
+    --------
+    zero_crossing_time : float
+        The x value where the fitted line crosses y=0
+        Returns None if no valid fit can be made
+    """
+    # Convert to numpy arrays for easier manipulation
+    x_values = data_in_window.index.to_numpy()
+    y_values = data_in_window.to_numpy()
+    
+    # Find the first local maximum
+    # A local maximum is where the value stops increasing
+    first_local_max_idx = None
+    for i in range(1, len(y_values)):
+        if y_values[i] < y_values[i-1]:
+            # Found the first point where it starts decreasing
+            first_local_max_idx = i - 1
+            break
+    
+    # If no local maximum found (always increasing), use the last point
+    if first_local_max_idx is None:
+        first_local_max_idx = len(y_values) - 1
+    
+    # Define fitting region: from b+20 points to maximum-20 points
+    fit_start_idx = 20
+    fit_end_idx = first_local_max_idx - 20
+    
+    # Check if we have enough points to fit
+    if fit_end_idx <= fit_start_idx or fit_start_idx >= len(x_values):
+        # Not enough points in the fitting region
+        return None
+    
+    # Select data from b+20 to first local maximum-20 (inclusive)
+    x_fit = x_values[fit_start_idx:fit_end_idx + 1]
+    y_fit = y_values[fit_start_idx:fit_end_idx + 1]
+    
+    # Fit a line (degree 1 polynomial): y = m*x + b
+    coeffs = np.polyfit(x_fit, y_fit, 1)
+    m, b = coeffs  # m is slope, b is intercept
+    
+    # Calculate where the line crosses y=0: 0 = m*x + b => x = -b/m
+    if abs(m) < 1e-10:  # Check for nearly horizontal line
+        return None
+    
+    zero_crossing_time = -b / m
+    
+    # Plot if requested
+    if plot:
+        plt.figure(figsize=(10, 6))
+        
+        # Plot all data points
+        plt.scatter(x_values, y_values, label='All data points', 
+                   marker='.', s=30, alpha=0.5, color='lightgray')
+        
+        # Highlight fitted region (b+20 to max-20)
+        plt.scatter(x_fit, y_fit, label=f'Fitted region (b+20 to max-20)', 
+                   marker='.', s=40, color='blue')
+        
+        # Plot the first local maximum
+        x_local_max = x_values[first_local_max_idx]
+        y_local_max = y_values[first_local_max_idx]
+        plt.scatter(x_local_max, y_local_max, label='First local maximum', 
+                   marker='*', s=200, color='red', zorder=5)
+        
+        # Mark the fitting region boundaries
+        plt.axvline(x=x_values[fit_start_idx], color='purple', 
+                   linestyle='--', linewidth=1, alpha=0.5, label='Fit region bounds')
+        plt.axvline(x=x_values[fit_end_idx], color='purple', 
+                   linestyle='--', linewidth=1, alpha=0.5)
+        
+        # Plot the fitted line (extended to show zero crossing)
+        x_line = np.array([zero_crossing_time, x_local_max])
+        y_line = m * x_line + b
+        plt.plot(x_line, y_line, 'r--', linewidth=2, 
+                label=f'Fitted line: y={m:.4f}x+{b:.4f}')
+        
+        # Mark the zero crossing point
+        plt.scatter(zero_crossing_time, 0, label=f'Zero crossing at x={zero_crossing_time:.4e}', 
+                   marker='D', s=100, color='green', zorder=5)
+        
+        # Add horizontal and vertical lines at zero crossing
+        plt.axhline(y=0, color='black', linestyle='-', linewidth=0.5)
+        plt.axvline(x=zero_crossing_time, color='green', 
+                   linestyle=':', linewidth=1.5, alpha=0.7)
+        
+        plt.xlabel('Time')
+        plt.ylabel('Amplitude')
+        plt.title('Zero Crossing Time Calculation (fit: b+20 to max-20)')
+        plt.legend(loc='best')
+        plt.grid(True, alpha=0.3)
+        plt.tight_layout()
+        plt.show()
+    
+    return zero_crossing_time

@@ -103,14 +103,18 @@ if __name__== '__main__':
         
         baselinesRMS=sig_free_rms
         utility.PlotWfs(wf,sig_free_time,params)
-    else:
-        baselines,baselinesRMS = baseline_cal.mean_baselane(df,params)
-        if(params['polarity'] == "negative"):
-            baselines=[-x for x in baselines]
-        for i in range(len(ChList)):
-            wf[ChList[i]]-=baselines[i]
-        print(baselines,baselinesRMS)
+    elif(params["variable_mean_rms"]==False):
+        if(params['simple_baseline'] == True):
+            baselines,baselinesRMS = baseline_cal.simple_baseline_stats(df,params)
+        else:
+            baselines,baselinesRMS = baseline_cal.mean_baselane(df,params)
 
+    # Subtract or add baseline value from each channel in wf based on polarity
+    for i, ch in enumerate(ChList):
+        if params["polarity"] == "positive":
+            wf[ch] = wf[ch] - baselines[i]
+        else:  # negative polarity
+            wf[ch] = wf[ch] + baselines[i]
 
     if(params["analyze_sum"]):
         wf=utility.CreateWfSum(wf,params)
@@ -130,7 +134,7 @@ if __name__== '__main__':
     df_mast = pd.DataFrame(columns=['event','channel','time','time_len','integral'])
     
     for i in range(len(ChList)):
-        time_b,time_l,integral,ampl,npeaks,is_sat = utility.Analyze(wf.copy(),baselinesRMS,ChList,i,params)
+        time_b,time_l,integral,ampl,npeaks,c_time = utility.Analyze(wf.copy(),baselinesRMS,ChList,i,params)
         #time_b,time_l,integral,ampl = utility.IntegrateFullWindow(wf.copy(),baselinesRMS,ChList,i,params)
         #print("number of peaks")
         #print(npeaks)
@@ -151,7 +155,7 @@ if __name__== '__main__':
         aux['integral'] = integral
         aux['ampl'] = ampl
         aux['npeak'] = npeaks
-        #aux['isSat'] = is_sat
+        aux['c_time'] = c_time
         
         
         df_mast = pd.concat([df_mast,aux],ignore_index=True) 

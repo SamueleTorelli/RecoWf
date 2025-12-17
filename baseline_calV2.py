@@ -69,7 +69,7 @@ def mean_baselane(final_df,params):
 
         values = filtered_df[channel]
 
-        n_bins = 80
+        n_bins = 90
 
         hist, bins, _ = ax.hist(
             values,
@@ -104,9 +104,10 @@ def mean_baselane(final_df,params):
             popt = [0.0, 0.0, 0.0]
 
         A, mu, sigma = popt
+        print(popt)
+        
 
-            # Define ±2σ window
-        mask_2sigma = (bin_centers >= mu - 2*sigma) & (bin_centers <= mu + 2*sigma)
+        mask_2sigma = (bin_centers >= mu - 6*sigma) & (bin_centers <= mu + 6*sigma)
 
         x_fit_2s = bin_centers[mask_2sigma]
         y_fit_2s = hist[mask_2sigma]
@@ -123,20 +124,24 @@ def mean_baselane(final_df,params):
             )
         except RuntimeError:
             popt = popt
-                    
+                
         # Plot the Gaussian fit
         x_smooth = np.linspace(x_fit_2s[0], x_fit_2s[-1], 300)
+        # Draw vertical lines at fit range limits
+        ax.axvline(x_fit_2s[0], color='green', linestyle='--', label='Fit Range')
+        ax.axvline(x_fit_2s[-1], color='green', linestyle='--')
+
+
         y_smooth = gaussian(x_smooth, *popt)
         a_label = (
             rf"Gaussian Fit "
             rf"$\mu$={mu:.3f}, "
             rf"$\sigma$={sigma:.3f})"
         )
+
         ax.plot(x_smooth, y_smooth, 'r-', label=a_label)
 
-        # Draw vertical lines at fit range limits
-        ax.axvline(x_fit_2s[0], color='green', linestyle='--', label='Fit Range')
-        ax.axvline(x_fit_2s[-1], color='green', linestyle='--')
+        
         
         """
         # Calculate FWHM and mode
@@ -176,6 +181,52 @@ def mean_baselane(final_df,params):
     
 
     return mode_baseline,hwhm_baseline
+
+
+def simple_baseline_stats(final_df, params):
+    """
+    Calculate mean and standard deviation of baseline points directly.
+    
+    Parameters:
+    -----------
+    final_df : pd.DataFrame
+        DataFrame containing TIME column and channel columns
+    params : dict
+        Dictionary containing 'n_points_pre_wf' key for number of baseline points
+    
+    Returns:
+    --------
+    mean_baseline : list
+        List of mean values for each channel
+    std_baseline : list
+        List of standard deviations for each channel
+    """
+    
+    # Define the TIME range for filtering (baseline region)
+    time_range_start = final_df['TIME'].iloc[0]
+    time_range_end = final_df['TIME'].iloc[0 + params["n_points_pre_wf"]]
+    
+    # Filter the dataframe for the given TIME range
+    filtered_df = final_df[(final_df['TIME'] > time_range_start) & (final_df['TIME'] < time_range_end)]
+    
+    # Get the list of channels dynamically (exclude TIME and last column)
+    channels = final_df.columns[1:-1].tolist()
+    
+    mean_baseline = []
+    std_baseline = []
+    
+    # Calculate mean and std for each channel
+    for channel in channels:
+        values = filtered_df[channel]
+        mean_val = np.mean(values)
+        std_val = np.std(values)
+        
+        mean_baseline.append(mean_val)
+        std_baseline.append(std_val)
+        
+        print(f"Channel {channel}: Mean = {mean_val:.6f}, Std = {std_val:.6f}")
+    
+    return mean_baseline, std_baseline
 
 
 def min_difference_binning(data, data_range=None, min_bins=1):

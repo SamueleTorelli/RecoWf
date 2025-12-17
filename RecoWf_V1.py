@@ -57,7 +57,10 @@ if __name__== '__main__':
             
     
     if(params["variable_mean_rms"]==False):
-        baselines,baselinesRMS = baseline_cal.mean_baselane(df,params)
+        if(params['simple_baseline'] == True):
+            baselines,baselinesRMS = baseline_cal.simple_baseline_stats(df,params)
+        else:
+            baselines,baselinesRMS = baseline_cal.mean_baselane(df,params)
         if(params['polarity'] == "negative"):
             baselines=[-x for x in baselines]
         

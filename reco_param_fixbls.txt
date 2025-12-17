@@ -1,9 +1,10 @@
 {
     "variable_mean_rms" : false,          # If false, baseline and RMS are corrected using the mean value of the waveforms across the entire dataset.
-
+    "simple_baseline" : true,
+    
     "filter" : true,                      # Apply a mean filter to smooth the signal, with a kernel size of 15.
     
-    "n_points_pre_wf" : 70,              # Number of waveform points used to calculate the mean and RMS for baseline correction.
+    "n_points_pre_wf" : 2500,              # Number of waveform points used to calculate the mean and RMS for baseline correction.
     
     "full_window" : false,                # If true, the entire waveform window is integrated. If false, integration happens in a defined search window. (might be fixed)
     
@@ -15,11 +16,13 @@
     
     "sat_corr" : false,                   # If true, apply a correction for signal saturation.
     
-    "nsigma" : 1.5,                      # Threshold for signal detection, defined as a multiple of the RMS noise (1.34 sigma).
+    "nsigma" : 0.5,                      # Threshold for signal detection, defined as a multiple of the RMS noise (1.34 sigma).
     
     "peaks_width": 40,                    # Expected width of peaks for the signal detection algorithm (find_peak function).
     
     "peaks_height": 250,                # Minimum height for detected peaks in the find_peak function.
+
+    "zero_crossing": true,
 
     "fourier_filter": false,		   #Fourier noise filter
 
@@ -29,7 +32,7 @@
 
     "analyze_sum": false,
 
-    "polarity" : "positive",   #can be positive or negative
+    "polarity" : "negative",   #can be positive or negative
 
     "sample_points": 1124,
 
