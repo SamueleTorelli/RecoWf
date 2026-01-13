@@ -125,7 +125,7 @@ if __name__== '__main__':
         for i in range(len(ChList)):
             #Analyze the waveform
             if( not params['full_window']):
-                time_b,time_l,integral,ampl,npeaks,is_sat = utility.Analyze(wf.copy(),baselinesRMS,ChList,i,params)
+                time_b,time_l,integral,ampl,npeaks,c_time = utility.Analyze(wf.copy(),baselinesRMS,ChList,i,params)
             else:
                 time_b,time_l,integral,ampl = utility.IntegrateFullWindow(wf.copy(),baselinesRMS,ChList,i,params)
             event =[]
@@ -149,7 +149,7 @@ if __name__== '__main__':
             aux['integral'] = integral
             aux['ampl'] = ampl
             aux['npeaks']= npeaks
-            #aux['is_sat']= is_sat
+            aux['c_time']= c_time
             
             #Append the event dataframe to the main one
             #df_mast = df_mast.append(aux,ignore_index = True)

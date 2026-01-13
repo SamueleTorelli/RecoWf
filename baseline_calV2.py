@@ -208,7 +208,7 @@ def simple_baseline_stats(final_df, params):
     
     # Filter the dataframe for the given TIME range
     filtered_df = final_df[(final_df['TIME'] > time_range_start) & (final_df['TIME'] < time_range_end)]
-    
+
     # Get the list of channels dynamically (exclude TIME and last column)
     channels = final_df.columns[1:-1].tolist()
     
@@ -217,6 +217,10 @@ def simple_baseline_stats(final_df, params):
     
     # Calculate mean and std for each channel
     for channel in channels:
+
+        filtered_df=filtered_df[filtered_df[channel]>-np.inf]
+        filtered_df=filtered_df[filtered_df[channel]<np.inf]
+        
         values = filtered_df[channel]
         mean_val = np.mean(values)
         std_val = np.std(values)

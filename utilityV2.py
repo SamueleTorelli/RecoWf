@@ -252,7 +252,8 @@ def Analyze(df,rms,chlist,chindex,params):
     # Compute integral, amplitude, and peak count within each [b, e) interval directly and clearly
     for b, e in zip(t_begin, t_end):
         mask = (df['TIME'] > b) & (df['TIME'] < e)
-        data_in_window = df.loc[mask, chlist[chindex]]
+        data_in_window = df.loc[mask, chlist[chindex]].copy()
+        data_in_window.index = df.loc[mask, 'TIME'].values
         
         # Integral over the window
         interval_integral = data_in_window.sum() * bin_width
@@ -266,8 +267,11 @@ def Analyze(df,rms,chlist,chindex,params):
         npeaks.append(int(len(peaks)))
 
         if(params["zero_crossing"]):
-            c_time = calculate_zero_crossing_time(data_in_window, plot=True)
-            c_times.append(c_time)
+            if not data_in_window.empty:
+                c_time = calculate_zero_crossing_time(data_in_window, plot=False)
+                c_times.append(c_time)
+            else:
+                c_times.append(np.nan)
     #print(chlist[chindex],is_sat)
         
     return t_begin,t_length,integral,amplitude,npeaks,c_times 
@@ -290,38 +294,6 @@ def IntegrateFullWindow(df,rms,chlist,chindex,params):
     t_length.append(-99)
 
     return t_begin,t_length,integral,amplitude
-"""
-def PlotWfsTimestamps(wf,dic,dic_len,rms,par):
-    # Create a figure with four subplots
-    fig, axs = plt.subplots(len(wf.columns[1:-1].tolist()), 1, figsize=(5, 10), sharex=True)
-
-    if(len(wf.columns[1:-1].tolist())==1):
-        ch=wf.columns[1:-1].tolist()
-        
-        axs.scatter(wf["TIME"], wf[ch[0]], label=ch[0], marker='.', s=1, edgecolors='black')
-        for j in range(len(dic[ch[0]])):
-            axs.axvline(x=dic[ch[0]][j],linewidth=1, color='b')
-            axs.axvline(x=dic[ch[0]][j]+dic_len[ch[0]][j],linewidth=.3, color='r') 
-        axs.axhline(y=par["nsigma"]*rms[0])    
-        axs.set_ylabel('V [V]')
-        axs.legend()
-    else:
-        for i, ch in enumerate(wf.columns[1:-1].tolist()):
-            # Scatter plot for Channel 1 with timestamps
-            axs[i].scatter(wf["TIME"], wf[ch], label=ch, marker='.', s=1, edgecolors='black')
-            for j in range(len(dic[ch])):
-                axs[i].axvline(x=dic[ch][j],linewidth=1, color='b')
-                axs[i].axvline(x=dic[ch][j]+dic_len[ch][j],linewidth=.3, color='r') 
-            axs[i].axhline(y=par["nsigma"]*rms[i])    
-            axs[i].set_ylabel('V [V]')
-            axs[i].legend()
-        
-    # Set the title for the entire figure
-    fig.suptitle('Voltage vs time', y=0.92)
-    
-    # Show the plot
-    plt.show()
-"""
 
 
 def PlotWfsTimestamps(wf, dic, dic_len, rms, par):
@@ -468,14 +440,13 @@ def flip_polarity(wf, ChList):
 def calculate_zero_crossing_time(data_in_window, plot=False):
     """
     Calculate the time where a linear fit intercepts zero.
-    Fits a line from the beginning of the window to the first local maximum.
+    Finds the first local maximum above 50% of the absolute maximum,
+    then fits a line from (previous local minimum + 20 points) to (local maximum - 20 points).
     
     Parameters:
     -----------
     data_in_window : pandas.Series
         Series with index as x values and series values as y values
-    params : dict
-        Parameters dictionary (not used currently, kept for compatibility)
     plot : bool, optional
         If True, plots the data points, fitted line, and zero crossing point
     
@@ -489,29 +460,55 @@ def calculate_zero_crossing_time(data_in_window, plot=False):
     x_values = data_in_window.index.to_numpy()
     y_values = data_in_window.to_numpy()
     
-    # Find the first local maximum
-    # A local maximum is where the value stops increasing
-    first_local_max_idx = None
-    for i in range(1, len(y_values)):
-        if y_values[i] < y_values[i-1]:
-            # Found the first point where it starts decreasing
-            first_local_max_idx = i - 1
-            break
+    # Find the absolute maximum to determine the threshold
+    absolute_max_idx = np.argmax(y_values)
+    absolute_max_value = y_values[absolute_max_idx]
+    threshold = 0.5 * absolute_max_value
     
-    # If no local maximum found (always increasing), use the last point
-    if first_local_max_idx is None:
-        first_local_max_idx = len(y_values) - 1
+    # Find all local maxima (peaks) using scipy's find_peaks
+    # This will find all peaks in the data
+    peaks, _ = find_peaks(y_values)
     
-    # Define fitting region: from b+20 points to maximum-20 points
-    fit_start_idx = 20
-    fit_end_idx = first_local_max_idx - 20
+    # Find the first local maximum (peak) above 50% of the absolute maximum
+    # Start scanning from the beginning of the data (first peak found)
+    local_max_idx = None
+    for peak_idx in peaks:
+        # Check if this peak is above the threshold
+        if y_values[peak_idx] > threshold:
+            local_max_idx = peak_idx
+            break  # Stop at the first peak above threshold
     
-    # Check if we have enough points to fit
-    if fit_end_idx <= fit_start_idx or fit_start_idx >= len(x_values):
-        # Not enough points in the fitting region
+    # If no local maximum found above threshold, use the absolute maximum
+    if local_max_idx is None:
+        local_max_idx = absolute_max_idx
+    
+    # Find the previous local minimum before the local maximum
+    # A local minimum is where the value stops decreasing
+    previous_local_min_idx = None
+    for i in range(local_max_idx - 1, 0, -1):
+        # Check if this is a local minimum (value is less than neighbors)
+        if i > 0 and i < len(y_values) - 1:
+            if y_values[i] < y_values[i-1] and y_values[i] < y_values[i+1]:
+                previous_local_min_idx = i
+                break
+    
+    # If no local minimum found before local max, use the first point
+    if previous_local_min_idx is None:
+        previous_local_min_idx = 0
+    
+    # Define fitting region: from (previous local minimum + 20) to (local maximum - 20)
+    fit_start_idx = previous_local_min_idx + 10
+    fit_end_idx = local_max_idx - 20
+    
+    # Check if we have enough points to fit and indices are valid
+    if (fit_end_idx <= fit_start_idx or 
+        fit_start_idx >= len(x_values) or 
+        fit_end_idx < 0 or 
+        fit_start_idx < 0):
+        # Not enough points in the fitting region or invalid indices
         return None
     
-    # Select data from b+20 to first local maximum-20 (inclusive)
+    # Select data from (previous local minimum + 20) to (absolute maximum - 20) (inclusive)
     x_fit = x_values[fit_start_idx:fit_end_idx + 1]
     y_fit = y_values[fit_start_idx:fit_end_idx + 1]
     
@@ -533,15 +530,31 @@ def calculate_zero_crossing_time(data_in_window, plot=False):
         plt.scatter(x_values, y_values, label='All data points', 
                    marker='.', s=30, alpha=0.5, color='lightgray')
         
-        # Highlight fitted region (b+20 to max-20)
-        plt.scatter(x_fit, y_fit, label=f'Fitted region (b+20 to max-20)', 
+        # Highlight fitted region (prev local min+20 to local max-20)
+        plt.scatter(x_fit, y_fit, label=f'Fitted region (prev min+20 to local max-20)', 
                    marker='.', s=40, color='blue')
         
-        # Plot the first local maximum
-        x_local_max = x_values[first_local_max_idx]
-        y_local_max = y_values[first_local_max_idx]
-        plt.scatter(x_local_max, y_local_max, label='First local maximum', 
+        # Plot the absolute maximum (for reference)
+        x_abs_max = x_values[absolute_max_idx]
+        y_abs_max = y_values[absolute_max_idx]
+        plt.scatter(x_abs_max, y_abs_max, label='Absolute maximum (reference)', 
+                   marker='*', s=200, color='gray', zorder=4, alpha=0.5)
+        
+        # Plot the local maximum used for fitting
+        x_local_max = x_values[local_max_idx]
+        y_local_max = y_values[local_max_idx]
+        plt.scatter(x_local_max, y_local_max, label='Local maximum (>50% abs max)', 
                    marker='*', s=200, color='red', zorder=5)
+        
+        # Plot the previous local minimum
+        x_prev_min = x_values[previous_local_min_idx]
+        y_prev_min = y_values[previous_local_min_idx]
+        plt.scatter(x_prev_min, y_prev_min, label='Previous local minimum', 
+                   marker='v', s=150, color='orange', zorder=5)
+        
+        # Plot the threshold line (50% of absolute maximum)
+        plt.axhline(y=threshold, color='cyan', linestyle=':', 
+                   linewidth=1, alpha=0.7, label='50% threshold')
         
         # Mark the fitting region boundaries
         plt.axvline(x=x_values[fit_start_idx], color='purple', 
@@ -566,7 +579,7 @@ def calculate_zero_crossing_time(data_in_window, plot=False):
         
         plt.xlabel('Time')
         plt.ylabel('Amplitude')
-        plt.title('Zero Crossing Time Calculation (fit: b+20 to max-20)')
+        plt.title('Zero Crossing Time Calculation (fit: prev min+20 to local max-20)')
         plt.legend(loc='best')
         plt.grid(True, alpha=0.3)
         plt.tight_layout()
